@@ -141,6 +141,9 @@
   <ItemGroup>
     <ClCompile Include="priority_collection_2.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\test_runner\test_runner\test_runner.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

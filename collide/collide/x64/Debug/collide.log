@@ -1,0 +1,19 @@
+﻿  collide.cpp
+D:\git\cppRepos\collide\collide\game_object.h(29,1): error C2027: use of undefined type 'Building'
+D:\git\cppRepos\collide\collide\game_object.h(4): message : see declaration of 'Building'
+D:\git\cppRepos\collide\collide\game_object.h(29,1): error C2661: 'geo2d::Collide': no overloaded function takes 1 arguments
+D:\git\cppRepos\collide\collide\game_object.h(32,1): error C2027: use of undefined type 'Tower'
+D:\git\cppRepos\collide\collide\game_object.h(5): message : see declaration of 'Tower'
+D:\git\cppRepos\collide\collide\game_object.h(32,1): error C2661: 'geo2d::Collide': no overloaded function takes 1 arguments
+D:\git\cppRepos\collide\collide\game_object.h(35,1): error C2027: use of undefined type 'Fence'
+D:\git\cppRepos\collide\collide\game_object.h(6): message : see declaration of 'Fence'
+D:\git\cppRepos\collide\collide\game_object.h(35,1): error C2661: 'geo2d::Collide': no overloaded function takes 1 arguments
+D:\git\cppRepos\collide\collide\game_object.h(58,1): error C2027: use of undefined type 'Tower'
+D:\git\cppRepos\collide\collide\game_object.h(5): message : see declaration of 'Tower'
+D:\git\cppRepos\collide\collide\game_object.h(58,1): error C2661: 'geo2d::Collide': no overloaded function takes 1 arguments
+D:\git\cppRepos\collide\collide\game_object.h(61,1): error C2027: use of undefined type 'Fence'
+D:\git\cppRepos\collide\collide\game_object.h(6): message : see declaration of 'Fence'
+D:\git\cppRepos\collide\collide\game_object.h(61,1): error C2661: 'geo2d::Collide': no overloaded function takes 1 arguments
+D:\git\cppRepos\collide\collide\game_object.h(91,1): error C2027: use of undefined type 'Fence'
+D:\git\cppRepos\collide\collide\game_object.h(6): message : see declaration of 'Fence'
+D:\git\cppRepos\collide\collide\game_object.h(91,1): error C2661: 'geo2d::Collide': no overloaded function takes 1 arguments

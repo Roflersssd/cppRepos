@@ -13,9 +13,26 @@ namespace TestRunnerPrivate {
     template <
         typename K,
         typename V,
-        template <typename, typename> class Map
-    >
+        template <typename, typename> class Map>
         std::ostream& PrintMap(std::ostream& os, const Map<K, V>& m) {
+        os << "{";
+        bool first = true;
+        for (const auto& kv : m) {
+            if (!first) {
+                os << ", ";
+            }
+            first = false;
+            os << kv.first << ": " << kv.second;
+        }
+        return os << "}";
+    }
+
+    template <
+        typename K,
+        typename V,
+        typename H
+    >
+    std::ostream& PrintMap(std::ostream& os, const std::unordered_map<K, V, H>& m) {
         os << "{";
         bool first = true;
         for (const auto& kv : m) {

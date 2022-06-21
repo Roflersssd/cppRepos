@@ -1,7 +1,9 @@
 ﻿#include "D:/git/cppRepos/test_runner.h"
 
+
 #include <forward_list>
 #include <iterator>
+#include <vector>
 
 using namespace std;
 
@@ -19,12 +21,17 @@ public:
     };
 
     void Add(const Type& value) {
-        int id = d_hasher(value) % d_num_buckets;
-        d_hashSet[id].push_front(value);
+        if (!Has(value)) {
+            int id = d_hasher(value) % d_num_buckets;
+            d_hashSet[id].push_front(value);
+        }
     }
     bool Has(const Type& value) const {
         int id = d_hasher(value) % d_num_buckets;
-        return find(d_hashSet[id].begin(), d_hashSet[id].end(), value)!= d_hashSet[id].end();
+        for (const auto& v : d_hashSet[id])
+            if (v == value)
+                return true;
+        return false;
     }
     void Erase(const Type& value) {
         int id = d_hasher(value) % d_num_buckets;
@@ -120,10 +127,10 @@ void TestEquivalence() {
 }
 
 int main() {
-    TestRunner tr;
-    RUN_TEST(tr, TestSmoke);
-    RUN_TEST(tr, TestEmpty);
-    RUN_TEST(tr, TestIdempotency);
-    RUN_TEST(tr, TestEquivalence);
+    HashSet<int, IntHasher> hs(10);
+    hs.Add(14);
+    hs.Add(14);
+    hs.Erase(14);
+    cout << hs.Has(14);
     return 0;
 }

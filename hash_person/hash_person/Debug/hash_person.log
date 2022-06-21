@@ -1,0 +1,12 @@
+﻿  hash_person.cpp
+D:\git\cppRepos\hash_person\hash_person\hash_person.cpp(69): fatal error C1001: Внутренняя ошибка компилятора.
+  (Файл компилятора "d:\agent\_work\4\s\src\vctools\Compiler\Utc\src\p2\main.c", строка 212.)
+   Чтобы обойти эту проблему, попытайтесь упростить или изменить программу в строках около указанной позиции.
+  Если это возможно, предоставьте шаги, которые привели к возникновению проблемы, на следующей странице: https://developercommunity.visualstudio.com.
+  Для получения дополнительных сведений выберите команду "Техническая поддержка"
+  в меню "Справка" Visual C++ или откройте файл справки технической поддержки.
+    CL!CloseTypeServerPDB()+0x43509
+    CL!CloseTypeServerPDB()+0x43509
+    CL!CloseTypeServerPDB()+0x434d9
+    CL!InvokeCompilerPassW()+0x15dfb7
+    CL!CloseTypeServerPDB()+0x42c44

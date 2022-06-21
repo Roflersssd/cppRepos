@@ -35,3 +35,5 @@ private:
 
 #define LOG_DURATION(message) \
   LogDuration UNIQ_ID(__LINE__){message};
+
+

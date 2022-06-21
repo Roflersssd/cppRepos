@@ -1,0 +1,93 @@
+﻿  comment_server.cpp
+  The contents of <optional> are available only with C++17 or later.
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(38,11): error C2429: language feature 'structured bindings' requires compiler flag '/std:c++17'
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(49,10): error C2039: 'optional': is not a member of 'std'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\include\unordered_set(24): message : see declaration of 'std'
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(49,18): error C2143: syntax error: missing ';' before '<'
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(49,18): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(49,48): error C2238: unexpected token(s) preceding ';'
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(62,23): error C2429: language feature 'structured bindings' requires compiler flag '/std:c++17'
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(64,22): error C2065: 'last_comment': undeclared identifier
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(64,38): error C2065: 'last_comment': undeclared identifier
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(65,21): error C2065: 'last_comment': undeclared identifier
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(67,28): error C2065: 'last_comment': undeclared identifier
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(68,1): error C2668: 'std::_Hash<std::_Uset_traits<_Kty,std::_Uhash_compare<_Kty,_Hasher,_Keyeq>,_Alloc,false>>::insert': ambiguous call to overloaded function
+          with
+          [
+              _Kty=size_t,
+              _Hasher=std::hash<size_t>,
+              _Keyeq=std::equal_to<size_t>,
+              _Alloc=std::allocator<size_t>
+          ]
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\include\xhash(1089,10): message : could be 'void std::_Hash<std::_Uset_traits<_Kty,std::_Uhash_compare<_Kty,_Hasher,_Keyeq>,_Alloc,false>>::insert(std::initializer_list<_Ty>)'
+          with
+          [
+              _Kty=size_t,
+              _Hasher=std::hash<size_t>,
+              _Keyeq=std::equal_to<size_t>,
+              _Alloc=std::allocator<size_t>,
+              _Ty=unsigned int
+          ]
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\include\xhash(1063,4): message : or       'std::pair<std::_List_const_iterator<std::_List_val<std::_List_simple_types<_Ty>>>,bool> std::_Hash<std::_Uset_traits<_Kty,std::_Uhash_compare<_Kty,_Hasher,_Keyeq>,_Alloc,false>>::insert(const unsigned int &)'
+          with
+          [
+              _Ty=unsigned int,
+              _Kty=size_t,
+              _Hasher=std::hash<size_t>,
+              _Keyeq=std::equal_to<size_t>,
+              _Alloc=std::allocator<size_t>
+          ]
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(68,1): message : while trying to match the argument list '(unknown-type)'
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(82,27): error C2429: language feature 'structured bindings' requires compiler flag '/std:c++17'
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(82,1): error C2429: language feature 'init-statements in if/switch' requires compiler flag '/std:c++17'
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(83,1): error C2668: 'std::_Hash<std::_Uset_traits<_Kty,std::_Uhash_compare<_Kty,_Hasher,_Keyeq>,_Alloc,false>>::erase': ambiguous call to overloaded function
+          with
+          [
+              _Kty=size_t,
+              _Hasher=std::hash<size_t>,
+              _Keyeq=std::equal_to<size_t>,
+              _Alloc=std::allocator<size_t>
+          ]
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\include\xhash(1231,15): message : could be 'unsigned int std::_Hash<std::_Uset_traits<_Kty,std::_Uhash_compare<_Kty,_Hasher,_Keyeq>,_Alloc,false>>::erase(const unsigned int &) noexcept(<expr>)'
+          with
+          [
+              _Kty=size_t,
+              _Hasher=std::hash<size_t>,
+              _Keyeq=std::equal_to<size_t>,
+              _Alloc=std::allocator<size_t>
+          ]
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\include\xhash(1222,14): message : or       'std::_List_const_iterator<std::_List_val<std::_List_simple_types<_Ty>>> std::_Hash<std::_Uset_traits<_Kty,std::_Uhash_compare<_Kty,_Hasher,_Keyeq>,_Alloc,false>>::erase(std::_List_const_iterator<std::_List_val<std::_List_simple_types<_Ty>>>) noexcept(<expr>)'
+          with
+          [
+              _Ty=unsigned int,
+              _Kty=size_t,
+              _Hasher=std::hash<size_t>,
+              _Keyeq=std::equal_to<size_t>,
+              _Alloc=std::allocator<size_t>
+          ]
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(83,1): message : while trying to match the argument list '(unknown-type)'
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(84,25): error C2065: 'last_comment': undeclared identifier
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(84,41): error C2065: 'last_comment': undeclared identifier
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(85,25): error C2065: 'last_comment': undeclared identifier
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(147,19): error C2429: language feature 'structured bindings' requires compiler flag '/std:c++17'
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(147,53): error C2429: language feature 'init-statements in if/switch' requires compiler flag '/std:c++17'
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(148,39): error C2280: 'std::basic_istringstream<char,std::char_traits<char>,std::allocator<char>>::basic_istringstream(const std::basic_istringstream<char,std::char_traits<char>,std::allocator<char>> &)': attempting to reference a deleted function
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\include\sstream(420): message : see declaration of 'std::basic_istringstream<char,std::char_traits<char>,std::allocator<char>>::basic_istringstream'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\include\sstream(420,5): message : 'std::basic_istringstream<char,std::char_traits<char>,std::allocator<char>>::basic_istringstream(const std::basic_istringstream<char,std::char_traits<char>,std::allocator<char>> &)': function was explicitly deleted
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(152,40): error C2672: 'std::move': no matching overloaded function found
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(152,49): error C2893: Failed to specialize function template 'remove_reference<_Ty>::type &&std::move(_Ty &&) noexcept'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\include\type_traits(1454): message : see declaration of 'std::move'
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(152,49): message : With the following template arguments:
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(152,49): message : '_Ty=unknown-type &'
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(152,57): error C2672: 'std::move': no matching overloaded function found
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(152,67): error C2893: Failed to specialize function template 'remove_reference<_Ty>::type &&std::move(_Ty &&) noexcept'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\include\type_traits(1454): message : see declaration of 'std::move'
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(152,67): message : With the following template arguments:
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(152,67): message : '_Ty=unknown-type &'
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(157,50): error C2664: 'std::basic_istream<char,std::char_traits<char>> &std::basic_istream<char,std::char_traits<char>>::read(_Elem *,std::streamsize)': cannot convert argument 1 from 'const _Elem *' to '_Elem *'
+          with
+          [
+              _Elem=char
+          ]
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(157,30): message : Conversion loses qualifiers
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\include\istream(506,39): message : see declaration of 'std::basic_istream<char,std::char_traits<char>>::read'

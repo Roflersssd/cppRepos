@@ -1,0 +1,4 @@
+﻿  comment_server.cpp
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(81,53): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\git\cppRepos\comment_server.cpp\comment_server.cpp\comment_server.cpp(81,53): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
+  comment_server.cpp.vcxproj -> D:\git\cppRepos\comment_server.cpp\x64\Debug\comment_server.exe

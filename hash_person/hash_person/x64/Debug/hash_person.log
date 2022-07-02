@@ -1,7 +1,0 @@
-﻿  hash_person.cpp
-D:\git\cppRepos\hash_person\hash_person\hash_person.cpp(102,65): warning C4267: аргумент: преобразование из "size_t" в "_Ty"; возможна потеря данных
-          with
-          [
-              _Ty=int
-          ]
-  hash_person.vcxproj -> D:\git\cppRepos\hash_person\x64\Debug\hash_person.exe

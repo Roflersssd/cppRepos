@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(second_index)
-
-set(CMAKE_CXX_STANDARD 17)
+project(hesh_set)
 
 file(GLOB CPP_SOURCES "src/*.cpp")
 

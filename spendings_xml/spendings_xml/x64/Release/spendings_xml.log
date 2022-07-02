@@ -1,7 +1,0 @@
-﻿  spendings_xml.cpp
-  xml.cpp
-  Generating code
-  Previous IPDB not found, fall back to full compilation.
-  All 623 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
-  Finished generating code
-  spendings_xml.vcxproj -> D:\git\cppRepos\spendings_xml\x64\Release\spendings_xml.exe

@@ -1,55 +1,56 @@
-﻿#include "../../test_runner.h"
-#include <cassert>
+﻿#include <cassert>
 #include <deque>
 #include <iostream>
+
+#include "../../test_runner.h"
 
 using namespace std;
 
 namespace {
 struct Node {
-  Node(int v, Node *p) : value(v), parent(p) {}
+  Node(int v, Node* p) : value(v), parent(p) {}
 
   int value;
-  Node *left = nullptr;
-  Node *right = nullptr;
-  Node *parent;
+  Node* left = nullptr;
+  Node* right = nullptr;
+  Node* parent;
 };
 
 class NodeBuilder {
-public:
-  Node *CreateRoot(int value) {
+ public:
+  Node* CreateRoot(int value) {
     nodes.emplace_back(value, nullptr);
     return &nodes.back();
   }
 
-  Node *CreateLeftSon(Node *me, int value) {
+  Node* CreateLeftSon(Node* me, int value) {
     assert(me->left == nullptr);
     nodes.emplace_back(value, me);
     me->left = &nodes.back();
     return me->left;
   }
 
-  Node *CreateRightSon(Node *me, int value) {
+  Node* CreateRightSon(Node* me, int value) {
     assert(me->right == nullptr);
     nodes.emplace_back(value, me);
     me->right = &nodes.back();
     return me->right;
   }
 
-private:
+ private:
   deque<Node> nodes;
 };
 
-Node *Next(Node *me) {
+Node* Next(Node* me) {
   if (me->right != nullptr) {
-    Node *ptr = me->right;
+    Node* ptr = me->right;
     while (ptr->left != nullptr) {
       ptr = ptr->left;
     }
     return ptr;
   } else if (me->parent != nullptr) {
-    Node *parent = me->parent;
-    Node *cur = me;
+    Node* parent = me->parent;
+    Node* cur = me;
     while (cur != parent->left && parent->parent != nullptr) {
       cur = parent;
       parent = parent->parent;
@@ -66,12 +67,12 @@ Node *Next(Node *me) {
 void Test1() {
   NodeBuilder nb;
 
-  Node *root = nb.CreateRoot(50);
+  Node* root = nb.CreateRoot(50);
   ASSERT_EQUAL(root->value, 50);
 
-  Node *l = nb.CreateLeftSon(root, 2);
-  Node *min = nb.CreateLeftSon(l, 1);
-  Node *r = nb.CreateRightSon(l, 4);
+  Node* l = nb.CreateLeftSon(root, 2);
+  Node* min = nb.CreateLeftSon(l, 1);
+  Node* r = nb.CreateRightSon(l, 4);
   ASSERT_EQUAL(min->value, 1);
   ASSERT_EQUAL(r->parent->value, 2);
 
@@ -93,10 +94,10 @@ void Test1() {
 
 void TestRootOnly() {
   NodeBuilder nb;
-  Node *root = nb.CreateRoot(42);
+  Node* root = nb.CreateRoot(42);
   ASSERT(Next(root) == nullptr);
 };
-} // namespace
+}  // namespace
 
 int main() {
   TestRunner tr;

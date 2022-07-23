@@ -5,7 +5,7 @@
 
 using namespace std;
 
-string Print(const Expression *e) {
+string Print(const Expression* e) {
   if (!e) {
     return "Null expression provided";
   }

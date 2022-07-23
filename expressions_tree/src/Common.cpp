@@ -2,18 +2,17 @@
 #include <stdexcept>
 
 class Number : public Expression {
-public:
+ public:
   Number(int i_value) : value(i_value) {}
   int Evaluate() const override { return value; }
   std::string ToString() const override { return std::to_string(value); }
 
-private:
+ private:
   int value;
 };
 
 class Operation : public Expression {
-
-public:
+ public:
   Operation(ExpressionPtr l, char opr, ExpressionPtr r)
       : left(std::move(l)), right(std::move(r)), operation(opr) {}
   int Evaluate() const override {
@@ -30,7 +29,7 @@ public:
            ")";
   }
 
-private:
+ private:
   char operation;
   ExpressionPtr left;
   ExpressionPtr right;

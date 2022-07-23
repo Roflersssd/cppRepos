@@ -6,12 +6,20 @@
 namespace geo2d {
 
 Rectangle::Rectangle(Point p1, Point p2)
-    : x_left(std::min(p1.x, p2.x)), x_right(std::max(p1.x, p2.x)),
-      y_bottom(std::min(p1.y, p2.y)), y_top(std::max(p1.y, p2.y)) {}
+    : x_left(std::min(p1.x, p2.x)),
+      x_right(std::max(p1.x, p2.x)),
+      y_bottom(std::min(p1.y, p2.y)),
+      y_top(std::max(p1.y, p2.y)) {}
 
-template <typename T> T Sqr(T x) { return x * x; }
+template <typename T>
+T Sqr(T x) {
+  return x * x;
+}
 
-template <typename T> T Sign(T x) { return x != 0 ? x / abs(x) : 0; }
+template <typename T>
+T Sign(T x) {
+  return x != 0 ? x / abs(x) : 0;
+}
 
 uint64_t DistanceSquared(Point p1, Point p2) {
   int64_t diff_x = p1.x - p2.x;
@@ -33,7 +41,9 @@ int64_t ScalarProduct(Vector lhs, Vector rhs) {
          static_cast<int64_t>(lhs.y) * rhs.y;
 }
 
-bool Collide(Point p, Point q) { return p.x == q.x && p.y == q.y; }
+bool Collide(Point p, Point q) {
+  return p.x == q.x && p.y == q.y;
+}
 
 bool Collide(Point p, Segment s) {
   const Vector v1{s.p1, p};
@@ -56,7 +66,9 @@ bool Collide(Point p, Circle c) {
 bool Collide(Segment s1, Segment s2);
 bool Collide(Circle c, Segment s);
 
-bool Collide(Rectangle r, Point p) { return Collide(p, r); }
+bool Collide(Rectangle r, Point p) {
+  return Collide(p, r);
+}
 bool Collide(Rectangle r, Segment s) {
   return Collide(s.p1, r) || Collide(s.p2, r) ||
          Collide(s, Segment{r.BottomLeft(), r.BottomRight()}) ||
@@ -81,7 +93,9 @@ bool Collide(Rectangle r, Circle c) {
          Collide(c, Segment{r.TopLeft(), r.BottomLeft()});
 }
 
-bool Collide(Segment s, Point p) { return Collide(p, s); }
+bool Collide(Segment s, Point p) {
+  return Collide(p, s);
+}
 bool Collide(Segment s1, Segment s2) {
   const Rectangle first_bounding_box(s1.p1, s1.p2);
   const Rectangle second_bounding_box(s2.p1, s2.p2);
@@ -97,11 +111,19 @@ bool Collide(Segment s1, Segment s2) {
          Sign(v2 * Vector{s2.p1, s1.p1}) * Sign(v2 * Vector{s2.p1, s1.p2}) <= 0;
 }
 
-bool Collide(Segment s, Rectangle r) { return Collide(r, s); }
-bool Collide(Segment s, Circle c) { return Collide(c, s); }
+bool Collide(Segment s, Rectangle r) {
+  return Collide(r, s);
+}
+bool Collide(Segment s, Circle c) {
+  return Collide(c, s);
+}
 
-bool Collide(Circle c, Point p) { return Collide(p, c); }
-bool Collide(Circle c, Rectangle r) { return Collide(r, c); }
+bool Collide(Circle c, Point p) {
+  return Collide(p, c);
+}
+bool Collide(Circle c, Rectangle r) {
+  return Collide(r, c);
+}
 bool Collide(Circle c, Segment s) {
   if (ScalarProduct(Vector{s.p1, s.p2}, Vector{s.p1, c.center}) >= 0 &&
       ScalarProduct(Vector{s.p2, s.p1}, Vector{s.p2, c.center}) >= 0) {
@@ -129,4 +151,4 @@ bool Collide(Circle c1, Circle c2) {
          Sqr<uint64_t>(c1.radius + c2.radius);
 }
 
-} // namespace geo2d
+}  // namespace geo2d

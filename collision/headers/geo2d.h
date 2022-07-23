@@ -26,11 +26,11 @@ struct Segment {
 };
 
 class Rectangle {
-private:
+ private:
   int x_left, x_right;
   int y_bottom, y_top;
 
-public:
+ public:
   Rectangle(Point p1, Point p2);
 
   int Left() const { return x_left; }
@@ -66,4 +66,4 @@ bool Collide(Circle c, Rectangle r);
 bool Collide(Circle c, Segment s);
 bool Collide(Circle c1, Circle c2);
 
-} // namespace geo2d
+}  // namespace geo2d

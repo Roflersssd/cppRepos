@@ -16,7 +16,7 @@ using Zoo = vector<unique_ptr<Animal>>;
 // Если очередное слово этого текста - Tiger, Wolf или Fox, функция должна
 // поместить соответствующего зверя в зоопарк. В противном случае она должна
 // прекратить чтение и сгенерировать исключение runtime_error.
-Zoo CreateZoo(istream &in) {
+Zoo CreateZoo(istream& in) {
   Zoo zoo;
   string word;
   while (in >> word) {
@@ -36,8 +36,8 @@ Zoo CreateZoo(istream &in) {
 // Эта функция должна перебрать всех зверей в зоопарке в порядке их создания
 // и записать в выходной поток для каждого из них результат работы виртуальной
 // функции voice. Разделяйте голоса разных зверей символом перевода строки '\n'.
-void Process(const Zoo &zoo, ostream &out) {
-  for (const auto &animal : zoo) {
+void Process(const Zoo& zoo, ostream& out) {
+  for (const auto& animal : zoo) {
     out << animal->Voice() << "\n";
   }
 }
@@ -47,10 +47,11 @@ void TestZoo() {
   ostringstream output;
   Process(CreateZoo(input), output);
 
-  const string expected = "Rrrr\n"
-                          "Wooo\n"
-                          "Tyaf\n"
-                          "Rrrr\n";
+  const string expected =
+      "Rrrr\n"
+      "Wooo\n"
+      "Tyaf\n"
+      "Rrrr\n";
 
   ASSERT_EQUAL(output.str(), expected);
 }

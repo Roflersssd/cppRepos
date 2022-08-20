@@ -1,4 +1,4 @@
-#include "test_runner.h"
+#include "../../test_runner.h"
 
 #include <algorithm>
 #include <cmath>
@@ -17,12 +17,25 @@ using namespace std;
 const double PI = 3.1415926535;
 const int EARTH_R = 6371;
 
-struct Stop {
-  string name;
-  double lat;
-  double lon;
+class Stop {
+ public:
+  Stop() {}
+  Stop(string name, double lat, double lon)
+      : name_(name), lat_(lat), lon_(lon) {}
 
-  bool operator==(const Stop& other) const { return name == other.name; }
+  string getName() const { return name_; }
+  double getLat() const { return lat_; }
+  double getLon() const { return lon_; }
+
+  void addDistance(const string& otherStopName, double distance) {
+    distanceToOtherStops.insert({otherStopName, distance});
+  }
+
+ private:
+  string name_;
+  double lat_;
+  double lon_;
+  unordered_map<string, double> distanceToOtherStops;
 };
 
 double degToRad(double deg) {
@@ -30,9 +43,9 @@ double degToRad(double deg) {
 }
 
 double calculateDistance(const Stop& lhs, const Stop& rhs) {
-  return acos(sin(degToRad(lhs.lat)) * sin(degToRad(rhs.lat)) +
-              cos(degToRad(lhs.lat)) * cos(degToRad(rhs.lat)) *
-                  cos(abs(degToRad(lhs.lon - rhs.lon)))) *
+  return acos(sin(degToRad(lhs.getLat())) * sin(degToRad(rhs.getLat())) +
+              cos(degToRad(lhs.getLat())) * cos(degToRad(rhs.getLat())) *
+                  cos(abs(degToRad(lhs.getLon() - rhs.getLon())))) *
          6371000;
 }
 
@@ -78,6 +91,13 @@ class Bus {
   int uniqueStops;
   vector<string> stops_;
 };
+
+struct StopInfo {
+  Stop stop;
+  set<string> passingBuses;
+};
+
+using SoptsInfo = unordered_map<string, StopInfo>;
 
 string_view trim(string_view str, const std::string& whitespace = " \t") {
   const auto strBegin = str.find_first_not_of(whitespace);
@@ -135,14 +155,13 @@ Number ReadNumberOnLine(istream& stream) {
   return number;
 }
 
-double calculateRouteDist(const Bus& bus,
-                          const unordered_map<string, Stop>& stopsInfo) {
+double calculateRouteDist(const Bus& bus, const SoptsInfo& stopsInfo) {
   const auto& stops = bus.getStops();
   double dist = 0;
 
   for (int i = 0; i < stops.size() - 1; ++i) {
-    dist +=
-        calculateDistance(stopsInfo.at(stops[i]), stopsInfo.at(stops[i + 1]));
+    dist += calculateDistance(stopsInfo.at(stops[i]).stop,
+                              stopsInfo.at(stops[i + 1]).stop);
   }
 
   if (bus.getIsCircle())
@@ -153,9 +172,13 @@ double calculateRouteDist(const Bus& bus,
 
 class BusManager {
  public:
-  void addBus(const Bus& bus) { buses.emplace(bus.getNumber(), bus); }
+  void addBus(const Bus& bus) {
+    buses.emplace(bus.getNumber(), bus);
+    for (const auto& stop : bus.getStops())
+      allStops[stop].passingBuses.insert(bus.getNumber());
+  }
 
-  string getBusInfo(string busNumber) const {
+  string getBusInfo(const string& busNumber) const {
     ostringstream info;
     info.precision(6);
     info << "Bus " << busNumber << ": ";
@@ -172,11 +195,32 @@ class BusManager {
     return info.str();
   }
 
-  void addStop(const Stop& stop) { allStops[stop.name] = stop; }
+  string getStopInfo(const string& stopName) const {
+    ostringstream info;
+    info.precision(6);
+    info << "Stop " << stopName << ": ";
+    if (allStops.find(stopName) == end(allStops)) {
+      info << "not found";
+      return info.str();
+    }
+
+    const set<string>& passingBuses = allStops.at(stopName).passingBuses;
+    if (passingBuses.empty())
+      info << "no buses";
+    else {
+      info << "buses";
+      for (const auto& bus : passingBuses)
+        info << " " << bus;
+    }
+
+    return info.str();
+  }
+
+  void addStop(const Stop& stop) { allStops[stop.getName()].stop = stop; }
 
  private:
   unordered_map<string, Bus> buses;
-  unordered_map<string, Stop> allStops;
+  SoptsInfo allStops;
 };
 
 Bus readBus(string_view& busRequest) {
@@ -200,7 +244,14 @@ Stop readStop(string_view& stopRequst) {
   string name = string(ReadToken(stopRequst, ":"));
   const auto lat = ConvertToDouble(ReadToken(stopRequst, ","));
   const auto lon = ConvertToDouble(ReadToken(stopRequst, "\n"));
-  return {name, lat, lon};
+  Stop stop(name, lat, lon);
+  for (auto distanceStr = ReadToken(stopRequst, "m to "); !distanceStr.empty();
+       distanceStr = ReadToken(stopRequst, "m to ")) {
+    string otherStopName(ReadToken(stopRequst, ","));
+    double distance = ConvertToDouble(distanceStr);
+    stop.addDistance(otherStopName, distance);
+  }
+  return stop;
 }
 
 BusManager readBusManager(istream& in_stream = cin) {
@@ -230,10 +281,12 @@ vector<string> processRequests(const BusManager& manager,
     string request_str;
     getline(in_stream, request_str);
     auto [type, requestBody] = SplitTwo(request_str);
-    if (type == "Bus") {
-      string number(requestBody);
-      res.push_back(manager.getBusInfo(number));
-    }
+    string name(requestBody);
+
+    if (type == "Bus")
+      res.push_back(manager.getBusInfo(name));
+    else if (type == "Stop")
+      res.push_back(manager.getStopInfo(name));
   }
 
   return res;
@@ -246,7 +299,7 @@ void PrintResponses(const vector<string>& responses, ostream& stream = cout) {
   }
 }
 
-void TestCommonRequest() {
+void TestPartARequest() {
   string busInfo =
       "10\n"
       "Stop Tolstopaltsevo: 55.611087, 37.20829\n"
@@ -278,9 +331,56 @@ void TestCommonRequest() {
   ASSERT_EQUAL(result, expectedResult)
 }
 
+void TestPartBRequest() {
+  string busInfo =
+      "13\n"
+      "Stop Tolstopaltsevo: 55.611087, 37.20829\n"
+      "Stop Marushkino: 55.595884, 37.209755\n"
+      "Bus 256: Biryulyovo Zapadnoye > Biryusinka > Universam > Biryulyovo "
+      "Tovarnaya > Biryulyovo Passazhirskaya > Biryulyovo Zapadnoye\n"
+      "Bus 750: Tolstopaltsevo - Marushkino - Rasskazovka\n"
+      "Stop Rasskazovka: 55.632761, 37.333324\n"
+      "Stop Biryulyovo Zapadnoye: 55.574371, 37.6517\n"
+      "Stop Biryusinka: 55.581065, 37.64839\n"
+      "Stop Universam: 55.587655, 37.645687\n"
+      "Stop Biryulyovo Tovarnaya: 55.592028, 37.653656\n"
+      "Stop Biryulyovo Passazhirskaya: 55.580999, 37.659164\n"
+      "Bus 828: Biryulyovo Zapadnoye > Universam > Rossoshanskaya ulitsa > "
+      "Biryulyovo Zapadnoye\n"
+      "Stop Rossoshanskaya ulitsa: 55.595579, 37.605757\n"
+      "Stop Prazhskaya: 55.611678, 37.603831\n";
+
+  istringstream in(busInfo);
+  BusManager manager = readBusManager(in);
+
+  string request =
+      "6\n"
+      "Bus 256\n"
+      "Bus 750\n"
+      "Bus 751\n"
+      "Stop Samara\n"
+      "Stop Prazhskaya\n"
+      "Stop Biryulyovo Zapadnoye\n";
+  vector<string> expectedResult = {
+      "Bus 256: 6 stops on route, 5 unique stops, 4371.02 route length",
+      "Bus 750: 5 stops on route, 3 unique stops, 20939.5 route length",
+      "Bus 751: not found",
+      "Stop Samara: not found",
+      "Stop Prazhskaya: no buses",
+      "Stop Biryulyovo Zapadnoye: buses 256 828"};
+  istringstream rin(request);
+  const auto result = processRequests(manager, rin);
+  ASSERT_EQUAL(result, expectedResult)
+}
+
+void Test() {
+  TestRunner tr;
+  RUN_TEST(tr, TestPartARequest);
+  RUN_TEST(tr, TestPartBRequest);
+}
+
 int main() {
-  // TestRunner tr;
-  // RUN_TEST(tr, TestCommonRequest);
+  Test();
   BusManager manager = readBusManager();
   const auto responses = processRequests(manager);
   PrintResponses(responses);

@@ -27,6 +27,14 @@ class Stop {
   double getLat() const { return lat_; }
   double getLon() const { return lon_; }
 
+  optional<double> getDistance(const string& stopName) const {
+    if (distanceToOtherStops.find(stopName) == end(distanceToOtherStops))
+      return nullopt;
+    else {
+      return distanceToOtherStops.at(stopName);
+    }
+  }
+
   void addDistance(const string& otherStopName, double distance) {
     distanceToOtherStops.insert({otherStopName, distance});
   }
@@ -42,11 +50,18 @@ double degToRad(double deg) {
   return deg * (PI / 180);
 }
 
-double calculateDistance(const Stop& lhs, const Stop& rhs) {
+double calculStraightDist(const Stop& lhs, const Stop& rhs) {
   return acos(sin(degToRad(lhs.getLat())) * sin(degToRad(rhs.getLat())) +
               cos(degToRad(lhs.getLat())) * cos(degToRad(rhs.getLat())) *
                   cos(abs(degToRad(lhs.getLon() - rhs.getLon())))) *
          6371000;
+}
+
+double calculGivenDist(const Stop& lhs, const Stop& rhs) {
+  auto distance = lhs.getDistance(rhs.getName());
+  if (!distance)
+    distance = rhs.getDistance(lhs.getName());
+  return *distance;
 }
 
 class Bus {
@@ -134,7 +149,6 @@ string_view ReadToken(string_view& s, string_view delimiter = " ") {
 }
 
 double ConvertToDouble(string_view str) {
-  // use std::from_chars when available to git rid of string copy
   size_t pos;
   const double result = stod(string(str), &pos);
   if (pos != str.length()) {
@@ -155,17 +169,21 @@ Number ReadNumberOnLine(istream& stream) {
   return number;
 }
 
-double calculateRouteDist(const Bus& bus, const SoptsInfo& stopsInfo) {
+template <typename Func>
+double calculateRouteDist(const Bus& bus,
+                          const SoptsInfo& stopsInfo,
+                          Func calculateFunc) {
   const auto& stops = bus.getStops();
   double dist = 0;
 
-  for (int i = 0; i < stops.size() - 1; ++i) {
-    dist += calculateDistance(stopsInfo.at(stops[i]).stop,
-                              stopsInfo.at(stops[i + 1]).stop);
-  }
+  for (int i = 0; i < stops.size() - 1; ++i)
+    dist += calculateFunc(stopsInfo.at(stops[i]).stop,
+                          stopsInfo.at(stops[i + 1]).stop);
 
   if (bus.getIsCircle())
-    dist *= 2;
+    for (int i = stops.size() - 1; i > 0; --i)
+      dist += calculateFunc(stopsInfo.at(stops[i]).stop,
+                            stopsInfo.at(stops[i - 1]).stop);
 
   return dist;
 }
@@ -188,9 +206,16 @@ class BusManager {
     }
 
     const Bus& bus = buses.at(busNumber);
+
+    const double gDist = calculateRouteDist(bus, allStops, calculGivenDist);
+    const double curvature =
+        gDist / calculateRouteDist(bus, allStops, calculStraightDist);
+
     info << bus.getStopsNumber() << " stops on route, ";
     info << bus.getUniqueStopsNumber() << " unique stops, ";
-    info << calculateRouteDist(bus, allStops) << " route length";
+    info << gDist << " route length, ";
+    info << std::setprecision(7) << curvature;
+    info << " curvature";
 
     return info.str();
   }
@@ -243,7 +268,7 @@ Bus readBus(string_view& busRequest) {
 Stop readStop(string_view& stopRequst) {
   string name = string(ReadToken(stopRequst, ":"));
   const auto lat = ConvertToDouble(ReadToken(stopRequst, ","));
-  const auto lon = ConvertToDouble(ReadToken(stopRequst, "\n"));
+  const auto lon = ConvertToDouble(ReadToken(stopRequst, ","));
   Stop stop(name, lat, lon);
   for (auto distanceStr = ReadToken(stopRequst, "m to "); !distanceStr.empty();
        distanceStr = ReadToken(stopRequst, "m to ")) {
@@ -266,6 +291,7 @@ BusManager readBusManager(istream& in_stream = cin) {
     if (type == "Bus")
       manager.addBus(readBus(requestBody));
     else if (type == "Stop")
+
       manager.addStop(readStop(requestBody));
     else
       throw std::runtime_error("Invalid requst type");
@@ -373,10 +399,61 @@ void TestPartBRequest() {
   ASSERT_EQUAL(result, expectedResult)
 }
 
+void TestPartCRequest() {
+  string busInfo =
+      "13\n"
+      "Stop Tolstopaltsevo: 55.611087, 37.20829, 3900m to Marushkino\n"
+      "Stop Marushkino: 55.595884, 37.209755, 9900m to Rasskazovka\n"
+      "Bus 256: Biryulyovo Zapadnoye > Biryusinka > Universam > Biryulyovo "
+      "Tovarnaya > Biryulyovo Passazhirskaya > Biryulyovo Zapadnoye\n"
+      "Bus 750: Tolstopaltsevo - Marushkino - Rasskazovka\n"
+      "Stop Rasskazovka: 55.632761, 37.333324\n"
+      "Stop Biryulyovo Zapadnoye: 55.574371, 37.6517, 7500m to Rossoshanskaya "
+      "ulitsa, 1800m to Biryusinka, 2400m to Universam\n"
+      "Stop Biryusinka: 55.581065, 37.64839, 750m to Universam\n"
+      "Stop Universam: 55.587655, 37.645687, 5600m to Rossoshanskaya ulitsa, "
+      "900m to Biryulyovo Tovarnaya\n"
+      "Stop Biryulyovo Tovarnaya: 55.592028, 37.653656, 1300m to Biryulyovo "
+      "Passazhirskaya\n"
+      "Stop Biryulyovo Passazhirskaya: 55.580999, 37.659164, 1200m to "
+      "Biryulyovo Zapadnoye\n"
+      "Bus 828: Biryulyovo Zapadnoye > Universam > Rossoshanskaya ulitsa > "
+      "Biryulyovo Zapadnoye\n"
+      "Stop Rossoshanskaya ulitsa: 55.595579, 37.605757\n"
+      "Stop Prazhskaya: 55.611678, 37.603831\n";
+
+  istringstream in(busInfo);
+  BusManager manager = readBusManager(in);
+
+  string request =
+      "6\n"
+      "Bus 256\n"
+      "Bus 750\n"
+      "Bus 751\n"
+      "Stop Samara\n"
+      "Stop Prazhskaya\n"
+      "Stop Biryulyovo Zapadnoye\n";
+  vector<string> expectedResult = {
+      "Bus 256: 6 stops on route, 5 unique stops, 5950 route length, 1.361239 "
+      "curvature",
+      "Bus 750: 5 stops on route, 3 unique stops, 27600 route length, 1.318084 "
+      "curvature",
+      "Bus 751: not found",
+      "Stop Samara: not found",
+      "Stop Prazhskaya: no buses",
+      "Stop Biryulyovo Zapadnoye: buses 256 828"};
+
+  istringstream rin(request);
+  const auto result = processRequests(manager, rin);
+
+  ASSERT_EQUAL(result, expectedResult)
+}
+
 void Test() {
   TestRunner tr;
-  RUN_TEST(tr, TestPartARequest);
-  RUN_TEST(tr, TestPartBRequest);
+  // RUN_TEST(tr, TestPartARequest);
+  // RUN_TEST(tr, TestPartBRequest);
+  RUN_TEST(tr, TestPartCRequest);
 }
 
 int main() {

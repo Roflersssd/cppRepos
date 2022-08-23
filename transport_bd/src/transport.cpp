@@ -1,50 +1,20 @@
-#include "../../test_runner.h"
+#include "transport.h"
+#include "json.h"
+//#include "tests.h"
 
 #include <algorithm>
 #include <cmath>
 #include <exception>
 #include <iomanip>
-#include <iostream>
 #include <memory>
-#include <optional>
 #include <sstream>
-#include <string_view>
-#include <unordered_map>
-#include <vector>
 
 using namespace std;
 
+namespace {
+
 const double PI = 3.1415926535;
 const int EARTH_R = 6371;
-
-class Stop {
- public:
-  Stop() {}
-  Stop(string name, double lat, double lon)
-      : name_(name), lat_(lat), lon_(lon) {}
-
-  string getName() const { return name_; }
-  double getLat() const { return lat_; }
-  double getLon() const { return lon_; }
-
-  optional<double> getDistance(const string& stopName) const {
-    if (distanceToOtherStops.find(stopName) == end(distanceToOtherStops))
-      return nullopt;
-    else {
-      return distanceToOtherStops.at(stopName);
-    }
-  }
-
-  void addDistance(const string& otherStopName, double distance) {
-    distanceToOtherStops.insert({otherStopName, distance});
-  }
-
- private:
-  string name_;
-  double lat_;
-  double lon_;
-  unordered_map<string, double> distanceToOtherStops;
-};
 
 double degToRad(double deg) {
   return deg * (PI / 180);
@@ -63,56 +33,6 @@ double calculGivenDist(const Stop& lhs, const Stop& rhs) {
     distance = rhs.getDistance(lhs.getName());
   return *distance;
 }
-
-class Bus {
- public:
-  Bus() : uniqueStops(0), isCircle_(false) {}
-
-  void addStop(const string& stop) {
-    if (find(begin(stops_), end(stops_), stop) == end(stops_))
-      ++uniqueStops;
-    stops_.push_back(stop);
-  }
-
-  Bus& setNumber(string number) {
-    number_ = number;
-    return *this;
-  }
-
-  Bus& setIsCircle(bool isCircle) {
-    isCircle_ = isCircle;
-    return *this;
-  }
-
-  double getUniqueStopsNumber() const { return uniqueStops; }
-
-  size_t getStopsNumber() const {
-    if (isCircle_)
-      return stops_.size() * 2 - 1;
-    else {
-      return stops_.size();
-    }
-  }
-
-  bool getIsCircle() const { return isCircle_; }
-
-  string getNumber() const { return number_; }
-
-  const vector<string>& getStops() const { return stops_; }
-
- private:
-  bool isCircle_;
-  string number_;
-  int uniqueStops;
-  vector<string> stops_;
-};
-
-struct StopInfo {
-  Stop stop;
-  set<string> passingBuses;
-};
-
-using SoptsInfo = unordered_map<string, StopInfo>;
 
 string_view trim(string_view str, const std::string& whitespace = " \t") {
   const auto strBegin = str.find_first_not_of(whitespace);
@@ -188,279 +108,215 @@ double calculateRouteDist(const Bus& bus,
   return dist;
 }
 
-class BusManager {
- public:
-  void addBus(const Bus& bus) {
-    buses.emplace(bus.getNumber(), bus);
-    for (const auto& stop : bus.getStops())
-      allStops[stop].passingBuses.insert(bus.getNumber());
-  }
-
-  string getBusInfo(const string& busNumber) const {
-    ostringstream info;
-    info.precision(6);
-    info << "Bus " << busNumber << ": ";
-    if (buses.find(busNumber) == end(buses)) {
-      info << "not found";
-      return info.str();
-    }
-
-    const Bus& bus = buses.at(busNumber);
-
-    const double gDist = calculateRouteDist(bus, allStops, calculGivenDist);
-    const double curvature =
-        gDist / calculateRouteDist(bus, allStops, calculStraightDist);
-
-    info << bus.getStopsNumber() << " stops on route, ";
-    info << bus.getUniqueStopsNumber() << " unique stops, ";
-    info << gDist << " route length, ";
-    info << std::setprecision(7) << curvature;
-    info << " curvature";
-
-    return info.str();
-  }
-
-  string getStopInfo(const string& stopName) const {
-    ostringstream info;
-    info.precision(6);
-    info << "Stop " << stopName << ": ";
-    if (allStops.find(stopName) == end(allStops)) {
-      info << "not found";
-      return info.str();
-    }
-
-    const set<string>& passingBuses = allStops.at(stopName).passingBuses;
-    if (passingBuses.empty())
-      info << "no buses";
-    else {
-      info << "buses";
-      for (const auto& bus : passingBuses)
-        info << " " << bus;
-    }
-
-    return info.str();
-  }
-
-  void addStop(const Stop& stop) { allStops[stop.getName()].stop = stop; }
-
- private:
-  unordered_map<string, Bus> buses;
-  SoptsInfo allStops;
-};
-
-Bus readBus(string_view& busRequest) {
+Bus toBus(const std::map<std::string, Json::Node>& busMap) {
   Bus bus;
-  string number(ReadToken(busRequest, ":"));
-
-  const bool isCircle = busRequest.find("-") != busRequest.npos;
-  bus.setIsCircle(isCircle);
-  const string stopDelim = isCircle ? "-" : ">";
-
-  bus.setNumber(number);
-  vector<string> stops;
-  for (auto stopName = ReadToken(busRequest, stopDelim); !stopName.empty();
-       stopName = ReadToken(busRequest, stopDelim))
-    bus.addStop(string(stopName));
-
+  bus.setNumber(busMap.at("name").AsString());
+  bus.setIsCircle(!busMap.at("is_roundtrip").AsBool());
+  const auto stops = busMap.at("stops").AsArray();
+  for (const auto& stop : stops)
+    bus.addStop(stop.AsString());
   return bus;
 }
 
-Stop readStop(string_view& stopRequst) {
-  string name = string(ReadToken(stopRequst, ":"));
-  const auto lat = ConvertToDouble(ReadToken(stopRequst, ","));
-  const auto lon = ConvertToDouble(ReadToken(stopRequst, ","));
-  Stop stop(name, lat, lon);
-  for (auto distanceStr = ReadToken(stopRequst, "m to "); !distanceStr.empty();
-       distanceStr = ReadToken(stopRequst, "m to ")) {
-    string otherStopName(ReadToken(stopRequst, ","));
-    double distance = ConvertToDouble(distanceStr);
-    stop.addDistance(otherStopName, distance);
-  }
+Stop toStop(const std::map<std::string, Json::Node>& stopMap) {
+  Stop stop(stopMap.at("name").AsString(), stopMap.at("latitude").AsDouble(),
+            stopMap.at("longitude").AsDouble());
+  const auto& roadDistances = stopMap.at("road_distances").AsMap();
+  for (const auto& [name, distance] : roadDistances)
+    stop.addDistance(name, distance.AsInt());
+
   return stop;
 }
 
-BusManager readBusManager(istream& in_stream = cin) {
-  const size_t request_count = ReadNumberOnLine<size_t>(in_stream);
+}  // namespace
 
+Stop::Stop(string name, double lat, double lon)
+    : name_(name), lat_(lat), lon_(lon) {}
+
+string Stop::getName() const {
+  return name_;
+}
+double Stop::getLat() const {
+  return lat_;
+}
+double Stop::getLon() const {
+  return lon_;
+}
+
+optional<double> Stop::getDistance(const string& stopName) const {
+  if (distanceToOtherStops.find(stopName) == end(distanceToOtherStops))
+    return nullopt;
+  else {
+    return distanceToOtherStops.at(stopName);
+  }
+}
+
+void Stop::addDistance(const string& otherStopName, double distance) {
+  distanceToOtherStops.insert({otherStopName, distance});
+}
+
+Bus::Bus() : uniqueStops(0), isCircle_(false) {}
+
+void Bus::addStop(const string& stop) {
+  if (find(begin(stops_), end(stops_), stop) == end(stops_))
+    ++uniqueStops;
+  stops_.push_back(stop);
+}
+
+Bus& Bus::setNumber(string number) {
+  number_ = number;
+  return *this;
+}
+
+Bus& Bus::setIsCircle(bool isCircle) {
+  isCircle_ = isCircle;
+  return *this;
+}
+
+double Bus::getUniqueStopsNumber() const {
+  return uniqueStops;
+}
+
+size_t Bus::getStopsNumber() const {
+  if (isCircle_)
+    return stops_.size() * 2 - 1;
+  else {
+    return stops_.size();
+  }
+}
+
+bool Bus::getIsCircle() const {
+  return isCircle_;
+}
+
+string Bus::getNumber() const {
+  return number_;
+}
+
+const vector<string>& Bus::getStops() const {
+  return stops_;
+}
+
+void BusManager::addBus(const Bus& bus) {
+  buses.emplace(bus.getNumber(), bus);
+  for (const auto& stop : bus.getStops())
+    allStops[stop].passingBuses.insert(bus.getNumber());
+}
+
+string BusManager::getBusInfo(const string& busNumber, int requestId) const {
+  ostringstream info;
+  info.precision(6);
+  info << "{" << endl;
+  info << "\"request_id\": " << requestId << ",\n";
+  if (buses.find(busNumber) == end(buses)) {
+    info << "\"error_message\": \"not found\"\n";
+    info << "}";
+    return info.str();
+  }
+
+  const Bus& bus = buses.at(busNumber);
+
+  const double gDist = calculateRouteDist(bus, allStops, calculGivenDist);
+  const double curvature =
+      gDist / calculateRouteDist(bus, allStops, calculStraightDist);
+
+  info << "\"stop_count\": " << bus.getStopsNumber() << ",\n";
+  info << "\"unique_stop_count\": " << bus.getUniqueStopsNumber() << ",\n";
+  info << "\"route_length\": " << gDist << ",\n";
+  info << "\"curvature\": " << curvature << endl;
+  info << "}";
+
+  return info.str();
+}
+
+string BusManager::getStopInfo(const string& stopName, int requestId) const {
+  ostringstream info;
+  info.precision(6);
+  info << "{" << endl;
+  info << "\"request_id\": " << requestId << ",\n";
+  if (allStops.find(stopName) == end(allStops)) {
+    info << "\"error_message\": \"not found\"\n";
+    info << "}";
+    return info.str();
+  }
+
+  info << "\"buses\": [\n";
+
+  const set<string>& passingBuses = allStops.at(stopName).passingBuses;
+  bool isFirst = true;
+  for (const auto& bus : passingBuses) {
+    if (!isFirst)
+      info << ",\n";
+    else
+      isFirst = false;
+    info << '"' << bus << '"';
+  }
+  info << "\n]\n}";
+  return info.str();
+}
+
+void BusManager::addStop(const Stop& stop) {
+  allStops[stop.getName()].stop = stop;
+}
+
+BusManager readBusManagerFromJson(const Json::Node& root) {
+  const auto& requests = root.AsMap().at("base_requests").AsArray();
   BusManager manager;
 
-  for (size_t i = 0; i < request_count; ++i) {
-    string request_str;
-    getline(in_stream, request_str);
-    auto [type, requestBody] = SplitTwo(request_str);
+  for (const auto& request : requests) {
+    const auto& requestMap = request.AsMap();
+    const string type = requestMap.at("type").AsString();
     if (type == "Bus")
-      manager.addBus(readBus(requestBody));
+      manager.addBus(toBus(requestMap));
     else if (type == "Stop")
-
-      manager.addStop(readStop(requestBody));
+      manager.addStop(toStop(requestMap));
     else
       throw std::runtime_error("Invalid requst type");
   }
   return manager;
 }
 
-vector<string> processRequests(const BusManager& manager,
-                               istream& in_stream = cin) {
+vector<string> processRequestsFromJson(const BusManager& manager,
+                                       const Json::Node& root) {
+  const auto& requests = root.AsMap().at("stat_requests").AsArray();
   vector<string> res;
-  const size_t request_count = ReadNumberOnLine<size_t>(in_stream);
-  for (size_t i = 0; i < request_count; ++i) {
-    string request_str;
-    getline(in_stream, request_str);
-    auto [type, requestBody] = SplitTwo(request_str);
-    string name(requestBody);
 
+  for (const auto& request : requests) {
+    const auto& requestMap = request.AsMap();
+    const string type = requestMap.at("type").AsString();
+    const string name = requestMap.at("name").AsString();
+    const int id = requestMap.at("id").AsInt();
     if (type == "Bus")
-      res.push_back(manager.getBusInfo(name));
+      res.push_back(manager.getBusInfo(name, id));
     else if (type == "Stop")
-      res.push_back(manager.getStopInfo(name));
+      res.push_back(manager.getStopInfo(name, id));
   }
 
   return res;
 }
 
-void PrintResponses(const vector<string>& responses, ostream& stream = cout) {
-  stream.precision(25);
+vector<string> processJson(istream& input) {
+  const auto root = Json::Load(input).GetRoot();
+  BusManager manager = readBusManagerFromJson(root);
+  return processRequestsFromJson(manager, root);
+}
+
+void PrintResponses(const vector<string>& responses, ostream& stream) {
+  stream << "[" << endl;
+  bool isFirst = true;
   for (const string& response : responses) {
-    stream << response << endl;
+    if (!isFirst)
+      stream << ",\n";
+    else
+      isFirst = false;
+    stream << response;
   }
-}
-
-void TestPartARequest() {
-  string busInfo =
-      "10\n"
-      "Stop Tolstopaltsevo: 55.611087, 37.20829\n"
-      "Stop Marushkino: 55.595884, 37.209755\n"
-      "Bus 256: Biryulyovo Zapadnoye > Biryusinka > Universam > Biryulyovo "
-      "Tovarnaya > Biryulyovo Passazhirskaya > Biryulyovo Zapadnoye\n"
-      "Bus 750: Tolstopaltsevo - Marushkino - Rasskazovka\n"
-      "Stop Rasskazovka: 55.632761, 37.333324\n"
-      "Stop Biryulyovo Zapadnoye: 55.574371, 37.6517\n"
-      "Stop Biryusinka: 55.581065, 37.64839\n"
-      "Stop Biryulyovo Tovarnaya: 55.592028, 37.653656\n"
-      "Stop Universam: 55.587655, 37.645687\n"
-      "Stop Biryulyovo Passazhirskaya: 55.580999, 37.659164\n";
-
-  istringstream in(busInfo);
-  BusManager manager = readBusManager(in);
-
-  string request =
-      "3\n"
-      "Bus 256\n"
-      "Bus 750\n"
-      "Bus 751\n";
-  vector<string> expectedResult = {
-      "Bus 256: 6 stops on route, 5 unique stops, 4371.02 route length",
-      "Bus 750: 5 stops on route, 3 unique stops, 20939.5 route length",
-      "Bus 751: not found"};
-  istringstream rin(request);
-  const auto result = processRequests(manager, rin);
-  ASSERT_EQUAL(result, expectedResult)
-}
-
-void TestPartBRequest() {
-  string busInfo =
-      "13\n"
-      "Stop Tolstopaltsevo: 55.611087, 37.20829\n"
-      "Stop Marushkino: 55.595884, 37.209755\n"
-      "Bus 256: Biryulyovo Zapadnoye > Biryusinka > Universam > Biryulyovo "
-      "Tovarnaya > Biryulyovo Passazhirskaya > Biryulyovo Zapadnoye\n"
-      "Bus 750: Tolstopaltsevo - Marushkino - Rasskazovka\n"
-      "Stop Rasskazovka: 55.632761, 37.333324\n"
-      "Stop Biryulyovo Zapadnoye: 55.574371, 37.6517\n"
-      "Stop Biryusinka: 55.581065, 37.64839\n"
-      "Stop Universam: 55.587655, 37.645687\n"
-      "Stop Biryulyovo Tovarnaya: 55.592028, 37.653656\n"
-      "Stop Biryulyovo Passazhirskaya: 55.580999, 37.659164\n"
-      "Bus 828: Biryulyovo Zapadnoye > Universam > Rossoshanskaya ulitsa > "
-      "Biryulyovo Zapadnoye\n"
-      "Stop Rossoshanskaya ulitsa: 55.595579, 37.605757\n"
-      "Stop Prazhskaya: 55.611678, 37.603831\n";
-
-  istringstream in(busInfo);
-  BusManager manager = readBusManager(in);
-
-  string request =
-      "6\n"
-      "Bus 256\n"
-      "Bus 750\n"
-      "Bus 751\n"
-      "Stop Samara\n"
-      "Stop Prazhskaya\n"
-      "Stop Biryulyovo Zapadnoye\n";
-  vector<string> expectedResult = {
-      "Bus 256: 6 stops on route, 5 unique stops, 4371.02 route length",
-      "Bus 750: 5 stops on route, 3 unique stops, 20939.5 route length",
-      "Bus 751: not found",
-      "Stop Samara: not found",
-      "Stop Prazhskaya: no buses",
-      "Stop Biryulyovo Zapadnoye: buses 256 828"};
-  istringstream rin(request);
-  const auto result = processRequests(manager, rin);
-  ASSERT_EQUAL(result, expectedResult)
-}
-
-void TestPartCRequest() {
-  string busInfo =
-      "13\n"
-      "Stop Tolstopaltsevo: 55.611087, 37.20829, 3900m to Marushkino\n"
-      "Stop Marushkino: 55.595884, 37.209755, 9900m to Rasskazovka\n"
-      "Bus 256: Biryulyovo Zapadnoye > Biryusinka > Universam > Biryulyovo "
-      "Tovarnaya > Biryulyovo Passazhirskaya > Biryulyovo Zapadnoye\n"
-      "Bus 750: Tolstopaltsevo - Marushkino - Rasskazovka\n"
-      "Stop Rasskazovka: 55.632761, 37.333324\n"
-      "Stop Biryulyovo Zapadnoye: 55.574371, 37.6517, 7500m to Rossoshanskaya "
-      "ulitsa, 1800m to Biryusinka, 2400m to Universam\n"
-      "Stop Biryusinka: 55.581065, 37.64839, 750m to Universam\n"
-      "Stop Universam: 55.587655, 37.645687, 5600m to Rossoshanskaya ulitsa, "
-      "900m to Biryulyovo Tovarnaya\n"
-      "Stop Biryulyovo Tovarnaya: 55.592028, 37.653656, 1300m to Biryulyovo "
-      "Passazhirskaya\n"
-      "Stop Biryulyovo Passazhirskaya: 55.580999, 37.659164, 1200m to "
-      "Biryulyovo Zapadnoye\n"
-      "Bus 828: Biryulyovo Zapadnoye > Universam > Rossoshanskaya ulitsa > "
-      "Biryulyovo Zapadnoye\n"
-      "Stop Rossoshanskaya ulitsa: 55.595579, 37.605757\n"
-      "Stop Prazhskaya: 55.611678, 37.603831\n";
-
-  istringstream in(busInfo);
-  BusManager manager = readBusManager(in);
-
-  string request =
-      "6\n"
-      "Bus 256\n"
-      "Bus 750\n"
-      "Bus 751\n"
-      "Stop Samara\n"
-      "Stop Prazhskaya\n"
-      "Stop Biryulyovo Zapadnoye\n";
-  vector<string> expectedResult = {
-      "Bus 256: 6 stops on route, 5 unique stops, 5950 route length, 1.361239 "
-      "curvature",
-      "Bus 750: 5 stops on route, 3 unique stops, 27600 route length, 1.318084 "
-      "curvature",
-      "Bus 751: not found",
-      "Stop Samara: not found",
-      "Stop Prazhskaya: no buses",
-      "Stop Biryulyovo Zapadnoye: buses 256 828"};
-
-  istringstream rin(request);
-  const auto result = processRequests(manager, rin);
-
-  ASSERT_EQUAL(result, expectedResult)
-}
-
-void Test() {
-  TestRunner tr;
-  // RUN_TEST(tr, TestPartARequest);
-  // RUN_TEST(tr, TestPartBRequest);
-  RUN_TEST(tr, TestPartCRequest);
+  stream << "\n]" << endl;
 }
 
 int main() {
-  Test();
-  BusManager manager = readBusManager();
-  const auto responses = processRequests(manager);
-  PrintResponses(responses);
-
+  // TransportTests::RunTests();
+  const auto respones = processJson();
+  PrintResponses(respones);
   return 0;
 }
